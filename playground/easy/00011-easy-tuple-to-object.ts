@@ -20,7 +20,9 @@
 
 /* _____________ Your Code Here _____________ */
 
-type TupleToObject<T extends readonly any[]> = any
+type TupleToObject<T extends readonly (string | number | symbol)[]> = {
+  [item in T[number]]: item
+}
 
 /* _____________ Test Cases _____________ */
 import type { Equal, Expect } from '@type-challenges/utils'
