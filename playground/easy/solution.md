@@ -21,7 +21,7 @@ type MyPick<T, K extends keyof T> = { [key in K]: T[key] }
 
 쉽게 접근하였다. 기존의 객체 타입에서 key, value를 추출하여 readonly 키워드만을 붙여주는 방식을 시도하였다:
 
-```tsx
+```typescript
 type MyReadonly<T> = {
   readonly [k in keyof T]: T[k]
 }
@@ -33,7 +33,7 @@ type MyReadonly<T> = {
 
 ### ❌ 시도 1
 
-```tsx
+```typescript
 type TupleToObject<T extends readonly any[]> = {
   [item in T[number]]: item
 }
@@ -43,7 +43,7 @@ generic인 `T`는 Array type으로 constraints 되어있다. Array type은 `numb
 
 좋은 시도였다. 하지만 Array type의 원소 타입이 `any`로 지정되어있었기 때문에 다음과 같은 타입 정의에서 에러가 발생하지 않았다:
 
-```tsx
+```typescript
 // @ts-expect-error
 type error = TupleToObject<[[1, 2], {}]>  // 에러 발생해야함
 ```
@@ -56,7 +56,7 @@ type error = TupleToObject<[[1, 2], {}]>  // 에러 발생해야함
 
 ### ✅ 시도 2
 
-```tsx
+```typescript
 type TupleToObject<T extends readonly (string | number | symbol)[]> = {
   [item in T[number]]: item
 }
@@ -66,3 +66,36 @@ type error = TupleToObject<[[1, 2], {}]>  // ❌이제 에러가 발생한다
 ```
 
 위와 같이 generic T의 타입을 허용 가능한 index signature 타입들(`string`, `number`, `symbol`)로만 구속시켜 에러가 발생하게끔 만들어주었다
+
+## 14 - First of Array
+
+### ❌ 시도 1
+
+```typescript
+type First<T extends any[]> = T[0]
+```
+
+단순하게 생각하였다. `T`는 `any[]`로 constraints 되어있으므로, indexed access type `T[0]`을 통해 첫 번째 원소의 타입을 가져오는 것이었다.
+
+대부분의 케이스에선 문제가 없었지만 빈 배열 `[]`에선 `undefined`를 반환하게 되어 타입 체크 에러가 발생하였다
+
+### ✅ 시도 2
+
+```typescript
+type First<T extends any[]> = T extends [] ? never : T[0]
+```
+
+결국 답을 봤다. 답을 보는 순간 아차 싶었다. 조건부 타입([Handbook - Conditional Types](https://www.typescriptlang.org/docs/handbook/2/conditional-types.html))을 사용할 생각은 있었지만 `T extends []`를 “`T`가 배열 타입을 extends하는가??” 로만 생각하였다. 하지만 `T extends []`가 의미하는 바는 “`T`가 **빈 배열**을 extends하는가??” 였다. 만일 배열 타입을 extends 하는지 점검하려면 `T extends any[]`를 사용했어야만 한다. 정리하자면:
+
+- `T extends []`: 타입 T가 정확히 빈 배열인지 확인하는 조건
+- `T extends any[]`: 타입 T가 배열 타입인지 확인하는 조건
+
+## 14 - First of Array
+
+### ✅ 시도 1
+
+```typescript
+type Length<T extends readonly any[]> = T['length']
+```
+
+쉽게 해결했다
